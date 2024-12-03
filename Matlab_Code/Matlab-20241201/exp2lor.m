@@ -1,62 +1,68 @@
-%% Check numerically the Fourier pair Laplace <-> Lorentzian
-
 % Grids in real and Fourier space
-N = 4096;                % Increase grid size for better resolution
-Dx = 0.01;               % Grid step in real space
-Lx = N * Dx;             % Upper truncation limit in real space
-Dxi = 2 * pi / Lx;       % Grid step in Fourier space
-x = Dx * (-N/2:N/2-1);   % Grid in real space
+% Linked by the Nyquist relation Dx*Dxi = 2*pi/N
+N = 2048;               % Grid size
+Dx = 0.01;              % Grid step in real space
+Lx = N * Dx;            % Upper truncation limit in real space
+Dxi = 2 * pi / Lx;      % Grid step in Fourier space
+Lxi = N * Dxi;          % Upper truncation limit in Fourier space
+x = Dx * (-N/2:N/2-1);  % Grid in real space
 xi = Dxi * (-N/2:N/2-1); % Grid in Fourier space
 
 % Analytical expressions
-lambda = 3;                              % Activity or rate parameter
-fa = exp(-lambda * abs(x));              % Laplace (real space)
-Fa = 2 * lambda ./ (xi.^2 + lambda^2);   % Lorentzian (Fourier space)
+lambda = 3;             % Activity or rate parameter
+fa = exp(-lambda * abs(x));          % Laplace or double exponential function
+Fa = 2 * lambda ./ (xi.^2 + lambda^2); % Lorentz or Cauchy function
 
-% Numerical Fourier Transform: Properly Scaled
-Fn = fftshift(fft(ifftshift(fa))) * Dx;   % Fourier Transform of fa -> Fourier space
-fn = fftshift(ifft(ifftshift(Fa))) * Dxi; % Inverse Fourier Transform of Fa -> Real space
+% Numerical approximations
+Fn = fftshift(ifft(ifftshift(fa))) * Lx; % Fourier transform of fa
+fn = fftshift(fft(ifftshift(Fa))) / Lx; % Inverse Fourier transform of Fa
+Fn1 = fftshift(fft(ifftshift(fa))) * Dx; % Fourier transform with Dx scaling
+fn1 = fftshift(ifft(ifftshift(Fa))) / Dx; % Inverse Fourier with Dx scaling
 
-% Check scaling
-disp(['Sum of fa: ', num2str(sum(fa) * Dx)]);
-disp(['Sum of real(fn): ', num2str(sum(real(fn)) * Dx)]);
+% Close all figures to start fresh
+close all
 
-% Plot 1: Real-space function (fa) and its numerical inverse FFT
+% Figure 1: Laplace function and numerical IFFT
 figure(1), clf, hold on
-plot(x, fa, 'k:', 'LineWidth', 2, 'DisplayName', 'Analytical f(x)')
-plot(x, real(fn), 'r', 'DisplayName', 'Re IFFT(F)')
-plot(x, imag(fn), 'g', 'DisplayName', 'Im IFFT(F)')
-axis([-4 4 -0.2 1.2])  % Adjust scale
-xlabel('x'), ylabel('f(x)')
-legend('show')
+plot(x, fa, 'r', 'DisplayName', 'Analytic f(x)')
+plot(x, real(fn), 'g.', 'DisplayName', 'Re IFFT(F)')
+plot(x, imag(fn), 'b.', 'DisplayName', 'Im IFFT(F)')
+axis([-4 4 0 1.2])
+xlabel('x')
+ylabel('f')
+legend
 title('Laplace or double exponential function')
 
-% Plot 2: Fourier-space function (Fa) and its numerical FFT
+% Additional Figures
+
+% Figure 2: Fourier transform visualization
 figure(2), clf, hold on
-plot(xi, Fa, 'c:', 'LineWidth', 2, 'DisplayName', 'Analytical F(\xi)')
-plot(xi, real(Fn), 'b', 'DisplayName', 'Re FFT(f)')
-plot(xi, imag(Fn), 'm', 'DisplayName', 'Im FFT(f)')
-axis([-20 20 -0.2 1.2])  % Adjust scale
-xlabel('\xi'), ylabel('F(\xi)')
-legend('show')
-title('Fourier Transform: Analytical vs Numerical')
+plot(xi, Fa, 'r', 'DisplayName', 'Analytical Fa')
+plot(xi, real(Fn), 'g.', 'DisplayName', 'Re FFT(f)')
+plot(xi, imag(Fn), 'b.', 'DisplayName', 'Im FFT(f)')
+xlabel('xi')
+ylabel('F')
+legend
+title('Fourier Transform of Laplace Function')
+axis([-50 50 -0.5 1.5])
 
-% Plot 3: Real-space function (fa) and its numerical inverse FFT
+% Figure 3: Amplitude comparison
 figure(3), clf, hold on
-plot(x, fa, 'k:', 'LineWidth', 2, 'DisplayName', 'Analytical f(x)')
-plot(x, real(fn), 'r', 'DisplayName', 'Re IFFT(F)')
-plot(x, imag(fn), 'g', 'DisplayName', 'Im IFFT(F)')
-axis([-4 4 -0.2 1.2])  % Adjust scale
-xlabel('x'), ylabel('f(x)')
-legend('show')
-title('Laplace function with corrected Inverse FFT')
+plot(xi, Fa, 'r', 'DisplayName', 'Analytical Fa')
+plot(xi, abs(Fn), 'g--', 'DisplayName', '|FFT(f)|')
+xlabel('xi')
+ylabel('Amplitude')
+legend
+title('Analytical vs Numerical Amplitudes')
+axis([-50 50 0 1.5])
 
-% Plot 4: Fourier-space function (Fa) and its numerical scaled FFT
+% Figure 4: Reconstruction of original function
 figure(4), clf, hold on
-plot(xi, Fa, 'c:', 'LineWidth', 2, 'DisplayName', 'Analytical F(\xi)')
-plot(xi, real(Fn1), 'b', 'DisplayName', 'Re FFT(f) (scaled)')
-plot(xi, imag(Fn1), 'm', 'DisplayName', 'Im FFT(f) (scaled)')
-axis([-20 20 -0.2 1.2])  % Adjust scale
-xlabel('\xi'), ylabel('F(\xi)')
-legend('show')
-title('Fourier Transform with scaled FFT')
+plot(x, fa, 'r', 'DisplayName', 'Analytical f(x)')
+plot(x, real(fn1), 'g.', 'DisplayName', 'Re IFFT(Fn1)')
+plot(x, imag(fn1), 'b.', 'DisplayName', 'Im IFFT(Fn1)')
+xlabel('x')
+ylabel('f')
+legend
+title('Reconstruction from Fourier Space')
+axis([-4 4 0 1.2])
